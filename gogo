@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.container {
+  text-align: center;
+  max-width: 500px;
+}
+
+.content {
+  background: white;
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0 0 0.5rem;
+}
+
+.attempt-info {
+  font-size: 0.95rem;
+  color: #ff6b9d;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+.button-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.draw-btn {
+  background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 10px 25px rgba(255, 107, 157, 0.4);
+}
+
+.draw-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(255, 107, 157, 0.6);
+}
+
+.draw-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.draw-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reset-btn {
+  background: white;
+  color: #ff6b9d;
+  border: 2px solid #ff6b9d;
+  padding: 0.8rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: none;
+}
+
+.reset-btn:hover:not(:disabled) {
+  background: #ffe6f0;
+}
+
+.reset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.result-box {
+  margin: 2rem 0;
+  min-height: 120px;
+  display: none;
+}
+
+.result-box.show {
+  display: block;
+}
+
+.prize-name {
+  font-size: 2.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 1rem 0;
+  animation: scaleIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  line-height: 1.2;
+}
+
+@keyframes scaleIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.congratulations {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0.5rem 0;
+  animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message {
+  font-size: 1.05rem;
+  color: #666;
+  margin-top: 1rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f0f0f0;
+  border-top: 4px solid #ff6b9d;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 1rem 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.kiss-emoji {
+  font-size: 2rem;
+  margin: 0.5rem 0;
+}
+
+.special-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div class="container">
+  <div class="content">
+    <h1 class="title">💕 당첨!</h1>
+    <p class="subtitle">버튼을 눌러 당신의 선물을 확인하세요</p>
+    <p class="attempt-info" id="attemptInfo">남은 기회: 3번</p>
+    
+    <div class="button-container">
+      <button class="draw-btn" id="drawBtn" onclick="drawLottery()">추첨하기</button>
+      <button class="reset-btn" id="resetBtn" onclick="reset()">다시 하기</button>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="spinner" id="spinner"></div>
+      <div id="resultContent" style="display:none;">
+        <div class="congratulations">축하합니다! 🎉</div>
+        <div id="specialBadge"></div>
+        <div class="kiss-emoji" id="kissEmoji">💋💋💋</div>
+        <div class="prize-name" id="prizeName"></div>
+        <div class="message" id="message"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const prizes = [
+  { 
+    name: "100,000원", 
+    message: "현금 10만원을 획득했습니다! 💰",
+    special: false
+  },
+  { 
+    name: "200,000원", 
+    message: "현금 20만원을 획득했습니다! 💰",
+    special: false
+  },
+  { 
+    name: "300,000원", 
+    message: "현금 30만원을 획득했습니다! 💰",
+    special: false
+  },
+  { 
+    name: "뽀뽀 무제한 이용권", 
+    message: "원하는 만큼 뽀뽀를 받을 수 있어요! 💋",
+    special: true
+  }
+];
+
+let attemptsLeft = 3;
+
+function updateAttemptInfo() {
+  document.getElementById('attemptInfo').textContent = `남은 기회: ${attemptsLeft}번`;
+}
+
+function drawLottery() {
+  if (attemptsLeft <= 0) {
+    alert('더 이상 기회가 없습니다! 💕');
+    return;
+  }
+
+  const drawBtn = document.getElementById('drawBtn');
+  const resultBox = document.getElementById('resultBox');
+  const resetBtn = document.getElementById('resetBtn');
+  const resultContent = document.getElementById('resultContent');
+  const spinner = document.getElementById('spinner');
+  
+  drawBtn.disabled = true;
+  resultBox.classList.add('show');
+  spinner.style.display = 'inline-block';
+  resultContent.style.display = 'none';
+  
+  setTimeout(() => {
+    const randomIndex = Math.floor(Math.random() * prizes.length);
+    const selectedPrize = prizes[randomIndex];
+    
+    spinner.style.display = 'none';
+    resultContent.style.display = 'block';
+    
+    document.getElementById('prizeName').textContent = selectedPrize.name;
+    document.getElementById('message').textContent = selectedPrize.message;
+    
+    const specialBadge = document.getElementById('specialBadge');
+    if (selectedPrize.special) {
+      specialBadge.innerHTML = '<div class="special-badge">✨ SPECIAL ✨</div>';
+      document.getElementById('kissEmoji').textContent = '💋💕💖💗💋';
+    } else {
+      specialBadge.innerHTML = '';
+      document.getElementById('kissEmoji').textContent = '💋💋💋';
+    }
+    
+    createConfetti(selectedPrize.special);
+    playSound(selectedPrize.special);
+  }, 2000);
+  
+  attemptsLeft--;
+  updateAttemptInfo();
+  
+  if (attemptsLeft > 0) {
+    resetBtn.style.display = 'inline-block';
+  } else {
+    resetBtn.style.display = 'none';
+  }
+}
+
+function reset() {
+  if (attemptsLeft <= 0) return;
+  
+  document.getElementById('drawBtn').disabled = false;
+  document.getElementById('resultBox').classList.remove('show');
+  document.getElementById('resetBtn').style.display = 'none';
+}
+
+function createConfetti(isSpecial) {
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  const particles = [];
+  const particleCount = isSpecial ? 250 : 150;
+  const emojis = isSpecial 
+    ? ['💋', '💕', '💖', '💗', '✨', '⭐', '🌟']
+    : ['💋', '💕', '💖', '💗'];
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      size: Math.random() * 10 + 5,
+      speedY: Math.random() * 5 + 3,
+      speedX: (Math.random() - 0.5) * 4,
+      opacity: 1,
+      emoji: emojis[Math.floor(Math.random() * emojis.length)],
+      rotation: Math.random() * Math.PI * 2
+    });
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    let hasParticles = false;
+    
+    particles.forEach(p => {
+      p.y += p.speedY;
+      p.x += p.speedX;
+      p.opacity -= 0.015;
+      p.rotation += 0.1;
+      
+      if (p.opacity > 0) {
+        ctx.globalAlpha = p.opacity;
+        ctx.font = `${p.size}px Arial`;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.fillText(p.emoji, 0, 0);
+        ctx.restore();
+        hasParticles = true;
+      }
+    });
+    
+    ctx.globalAlpha = 1;
+    
+    if (hasParticles) {
+      requestAnimationFrame(animate);
+    }
+  }
+  
+  animate();
+}
+
+function playSound(isSpecial) {
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const now = audioContext.currentTime;
+  
+  const frequencies = isSpecial 
+    ? [523.25, 659.25, 783.99, 1046.50] 
+    : [523.25, 659.25, 783.99];
+  
+  frequencies.forEach((freq, i) => {
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.3, now + i * 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.3);
+    
+    osc.start(now + i * 0.15);
+    osc.stop(now + i * 0.15 + 0.3);
+  });
+}
+
+window.addEventListener('resize', () => {
+  const canvas = document.getElementById('confetti');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+updateAttemptInfo();
+</script>
+
+</body>
+</html>
